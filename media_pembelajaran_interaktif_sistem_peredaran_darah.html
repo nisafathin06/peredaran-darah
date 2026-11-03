@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Circulation Adventure - Media Pembelajaran IPA Kelas 8</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bloodRed: '#DC2626',
+                        oxygenBlue: '#0284C7',
+                        accentYellow: '#F59E0B'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Fredoka', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+            user-select: none;
+        }
+
+        .title-font {
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ef4444;
+            border-radius: 4px;
+        }
+
+        /* Heartbeat Animation */
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            14% { transform: scale(1.08); }
+            28% { transform: scale(1); }
+            42% { transform: scale(1.12); }
+            70% { transform: scale(1); }
+        }
+
+        .animate-heartbeat {
+            animation: heartbeat 1.4s infinite ease-in-out;
+            transform-origin: center;
+        }
+
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+
+        /* Drag & Drop */
+        .draggable-item {
+            cursor: grab;
+            touch-action: manipulation;
+        }
+        .draggable-item:active {
+            cursor: grabbing;
+        }
+        .drop-target {
+            transition: all 0.2s ease;
+            touch-action: manipulation;
+        }
+        .drop-target.drag-over {
+            background-color: rgba(239, 68, 68, 0.25);
+            border-color: #ef4444;
+            transform: scale(1.02);
+        }
+
+        /* IFP Active Card Selection */
+        .card-selected-ifp {
+            border-color: #f59e0b !important;
+            background-color: #78350f !important;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.6);
+        }
+
+        .glow-red { box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
+        .glow-blue { box-shadow: 0 0 20px rgba(14, 165, 233, 0.5); }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen justify-between overflow-x-hidden">
+
+    <!-- HEADER / NAVIGATION -->
+    <header class="w-full glass-panel sticky top-0 z-50 px-4 py-3 shadow-xl">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
+            <!-- Logo -->
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchMission('home')">
+                <div class="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center animate-heartbeat text-white shadow-lg">
+                    <i class="fa-solid fa-heart-pulse text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="title-font font-bold text-lg leading-tight tracking-wide text-red-500">BLOOD CIRCULATION</h1>
+                    <p class="text-xs text-slate-300 font-semibold">ADVENTURE • Kelas VIII SMP</p>
+                </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div id="top-bar-stats" class="hidden flex items-center gap-4 bg-slate-900/80 px-4 py-1.5 rounded-full border border-slate-700">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-amber-400 text-sm"></i>
+                    <span class="text-xs text-slate-400">Skor:</span>
+                    <span id="player-score" class="font-bold text-amber-400">0</span>
+                </div>
+                <div class="h-4 w-[1px] bg-slate-700"></div>
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-flag text-red-400 text-sm"></i>
+                    <span class="text-xs text-slate-400">Progres Misi:</span>
+                    <span id="missions-completed-count" class="font-bold text-red-400">0/6</span>
+                </div>
+            </div>
+
+            <!-- Developer & Controls -->
+            <div class="flex items-center gap-3">
+                <button id="sound-toggle-btn" onclick="toggleSound()" class="p-2 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition" title="Toggle Audio">
+                    <i id="sound-icon" class="fa-solid fa-volume-high text-green-400"></i>
+                </button>
+                <div class="hidden sm:flex flex-col text-right">
+                    <span class="text-[10px] text-slate-400 uppercase tracking-wider">Pengembang</span>
+                    <span class="text-xs font-bold text-slate-200">Nisa Fathin Muslimah</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 flex flex-col justify-center">
+
+        <!-- ================= HOME SCREEN ================= -->
+        <section id="screen-home" class="screen-view active flex flex-col items-center justify-center text-center py-6">
+            <div class="max-w-3xl glass-panel p-8 md:p-12 rounded-3xl shadow-2xl border border-slate-700/50 relative overflow-hidden">
+                <div class="absolute -top-20 -left-20 w-60 h-60 bg-red-600/20 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -bottom-20 -right-20 w-60 h-60 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div class="relative inline-block mb-6">
+                    <div class="w-28 h-28 md:w-36 md:h-36 bg-gradient-to-tr from-red-600 via-rose-500 to-blue-500 rounded-full flex items-center justify-center mx-auto shadow-xl shadow-red-900/40 animate-heartbeat">
+                        <i class="fa-solid fa-heart-pulse text-5xl md:text-6xl text-white"></i>
+                    </div>
+                    <span class="absolute bottom-0 right-0 bg-blue-600 text-white text-xs px-2.5 py-1 rounded-full font-bold shadow-md border border-white/20">IPA Kelas VIII</span>
+                </div>
+
+                <h1 class="title-font text-3xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-rose-300 to-blue-400 mb-3">
+                    BLOOD CIRCULATION ADVENTURE
+                </h1>
+                <p class="text-slate-300 text-base md:text-lg mb-8 max-w-xl mx-auto font-medium">
+                    Petualangan Menjelajahi Sistem Peredaran Darah Manusia
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+                    <button onclick="switchMission('misi1')" class="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-bold text-lg rounded-2xl shadow-lg shadow-red-600/30 transform hover:-translate-y-1 transition duration-200 flex items-center justify-center gap-3">
+                        <i class="fa-solid fa-play"></i> MULAI PETUALANGAN
+                    </button>
+                    <button onclick="openModal('instructions-modal')" class="w-full sm:w-auto px-6 py-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-base rounded-2xl border border-slate-700 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-circle-info text-blue-400"></i> Petunjuk Permainan
+                    </button>
+                </div>
+
+                <div class="pt-6 border-t border-slate-700/50 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-2">
+                    <span><i class="fa-solid fa-graduation-cap text-red-400 mr-1"></i> Kurikulum Merdeka SMP/MTs</span>
+                    <span class="bg-slate-800/80 px-3 py-1 rounded-full border border-slate-700 font-semibold text-slate-300">
+                        Oleh: <strong class="text-red-400">Nisa Fathin Muslimah</strong>
+                    </span>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= MISI 1: ORGAN PEREDARAN DARAH ================= -->
+        <section id="screen-misi1" class="screen-view hidden">
+            <div class="glass-panel p-6 rounded-3xl">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-4 border-b border-slate-700 gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-red-400 uppercase tracking-widest">Misi 1 dari 6</span>
+                        <h2 class="title-font text-2xl md:text-3xl font-bold text-white">Mengenal Organ Peredaran Darah</h2>
+                        <p class="text-slate-300 text-sm">Klik organ pada ilustrasi tubuh manusia untuk mengetahui fungsinya!</p>
+                    </div>
+                    <button onclick="markMissionComplete('misi1', 'misi2')" class="px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl text-sm transition flex items-center gap-2 shadow-lg">
+                        Lanjut Misi 2 <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                    <!-- SVG Interactive Body Diagram -->
+                    <div class="lg:col-span-6 bg-slate-900/80 rounded-2xl p-4 border border-slate-800 flex justify-center relative min-h-[420px]">
+                        <svg viewBox="0 0 300 500" class="w-full max-w-[320px] h-auto">
+                            <!-- Silhouette -->
+                            <path d="M 150 30 C 170 30, 185 45, 185 65 C 185 85, 170 100, 150 100 C 130 100, 115 85, 115 65 C 115 45, 130 30, 150 30 Z M 115 105 L 185 105 C 210 110, 220 130, 225 180 L 210 185 L 195 130 L 195 260 L 205 460 L 170 460 L 155 300 L 145 300 L 130 460 L 95 460 L 105 260 L 105 130 L 90 185 L 75 180 C 80 130, 90 110, 115 105 Z" fill="#334155" opacity="0.6" stroke="#475569" stroke-width="2"/>
+                            
+                            <!-- Internal Lines -->
+                            <path d="M 150 165 L 150 240 M 150 165 L 125 115 M 150 165 L 175 115 M 150 240 L 135 380 L 135 450 M 150 240 L 165 380 L 165 450" stroke="#ef4444" stroke-width="4" fill="none" stroke-linecap="round"/>
+                            <path d="M 158 165 L 158 240 M 158 165 L 133 115 M 158 165 L 183 115 M 158 240 L 143 380 L 143 450 M 158 240 L 173 380 L 173 450" stroke="#0284c7" stroke-width="4" fill="none" stroke-linecap="round"/>
+
+                            <!-- Organ Nodes -->
+                            <g class="cursor-pointer group" onclick="showOrganDetail('jantung')">
+                                <circle cx="154" cy="165" r="18" fill="#dc2626" class="animate-pulse group-hover:fill-rose-400 transition"/>
+                                <path d="M 154 157 C 150 152, 143 158, 154 170 C 165 158, 158 152, 154 157 Z" fill="#ffffff"/>
+                                <text x="180" y="170" fill="#f8fafc" font-size="11" font-weight="bold">1. Jantung</text>
+                            </g>
+                            <g class="cursor-pointer group" onclick="showOrganDetail('arteri')">
+                                <circle cx="135" cy="220" r="12" fill="#ef4444" class="group-hover:scale-125 transition"/>
+                                <line x1="135" y1="220" x2="70" y2="220" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="3,3"/>
+                                <text x="10" y="224" fill="#f8fafc" font-size="11" font-weight="bold">2. Arteri</text>
+                            </g>
+                            <g class="cursor-pointer group" onclick="showOrganDetail('vena')">
+                                <circle cx="173" cy="230" r="12" fill="#0284c7" class="group-hover:scale-125 transition"/>
+                                <line x1="173" y1="230" x2="230" y2="230" stroke="#0284c7" stroke-width="1.5" stroke-dasharray="3,3"/>
+                                <text x="235" y="234" fill="#f8fafc" font-size="11" font-weight="bold">3. Vena</text>
+                            </g>
+                            <g class="cursor-pointer group" onclick="showOrganDetail('kapiler')">
+                                <circle cx="135" cy="420" r="12" fill="#a855f7" class="group-hover:scale-125 transition"/>
+                                <line x1="135" y1="420" x2="70" y2="420" stroke="#a855f7" stroke-width="1.5" stroke-dasharray="3,3"/>
+                                <text x="5" y="424" fill="#f8fafc" font-size="11" font-weight="bold">4. Kapiler</text>
+                            </g>
+                            <g class="cursor-pointer group" onclick="showOrganDetail('darah')">
+                                <circle cx="150" cy="80" r="12" fill="#e11d48" class="group-hover:scale-125 transition"/>
+                                <line x1="150" y1="80" x2="220" y2="80" stroke="#e11d48" stroke-width="1.5" stroke-dasharray="3,3"/>
+                                <text x="225" y="84" fill="#f8fafc" font-size="11" font-weight="bold">5. Darah</text>
+                            </g>
+                        </svg>
+                    </div>
+
+                    <!-- Details Card -->
+                    <div class="lg:col-span-6 flex flex-col justify-center">
+                        <div id="organ-info-box" class="glass-card p-6 rounded-2xl border-l-4 border-red-500 min-h-[220px]">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div id="organ-icon" class="w-12 h-12 rounded-xl bg-red-600/30 text-red-400 flex items-center justify-center text-2xl font-bold">
+                                    <i class="fa-solid fa-hand-pointer"></i>
+                                </div>
+                                <div>
+                                    <h3 id="organ-title" class="title-font text-xl font-bold text-white">Petunjuk Eksplorasi</h3>
+                                    <span id="organ-subtitle" class="text-xs text-slate-400">Klik organ pada tubuh di sebelah kiri</span>
+                                </div>
+                            </div>
+                            <p id="organ-desc" class="text-slate-300 text-sm leading-relaxed mb-4">
+                                Sistem peredaran darah manusia terdiri atas tiga komponen utama: pemompa (jantung), pembawa (pembuluh darah), dan cairan pengangkut (darah). Klik salah satu nomor organ di kiri untuk penjelasan detail!
+                            </p>
+                        </div>
+
+                        <!-- Progress Check -->
+                        <div class="mt-4 bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+                            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Checklist Organ Yang Dipelajari:</h4>
+                            <div class="flex flex-wrap gap-2" id="organ-checklist">
+                                <span id="check-jantung" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 text-slate-500 border border-slate-700"><i class="fa-regular fa-circle mr-1"></i> Jantung</span>
+                                <span id="check-arteri" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 text-slate-500 border border-slate-700"><i class="fa-regular fa-circle mr-1"></i> Arteri</span>
+                                <span id="check-vena" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 text-slate-500 border border-slate-700"><i class="fa-regular fa-circle mr-1"></i> Vena</span>
+                                <span id="check-kapiler" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 text-slate-500 border border-slate-700"><i class="fa-regular fa-circle mr-1"></i> Kapiler</span>
+                                <span id="check-darah" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 text-slate-500 border border-slate-700"><i class="fa-regular fa-circle mr-1"></i> Darah</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= MISI 2: EKSPLORASI JANTUNG ================= -->
+        <section id="screen-misi2" class="screen-view hidden">
+            <div class="glass-panel p-6 rounded-3xl">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-4 border-b border-slate-700 gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-red-400 uppercase tracking-widest">Misi 2 dari 6</span>
+                        <h2 class="title-font text-2xl md:text-3xl font-bold text-white">Eksplorasi Jantung Manusia</h2>
+                        <p class="text-slate-300 text-sm">Pelajari 4 Ruang Jantung, Katup, dan Pembuluh Darah Utama.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="switchMission('misi1')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-sm transition">
+                            <i class="fa-solid fa-arrow-left"></i> Kembali
+                        </button>
+                        <button onclick="markMissionComplete('misi2', 'misi3')" class="px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl text-sm transition flex items-center gap-2 shadow-lg">
+                            Lanjut Misi 3 <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                    <!-- Interactive Heart Diagram -->
+                    <div class="lg:col-span-6 bg-slate-900/80 p-4 rounded-2xl border border-slate-800 flex flex-col items-center relative">
+                        <div class="relative w-full max-w-[340px] h-[320px] flex items-center justify-center">
+                            <svg viewBox="0 0 300 300" class="w-full h-full animate-heartbeat">
+                                <!-- Heart Outer Contour -->
+                                <path d="M 150 50 C 90 0, 10 90, 80 200 C 120 260, 150 280, 150 280 C 150 280, 180 260, 220 200 C 290 90, 210 0, 150 50 Z" fill="#991b1b" stroke="#7f1d1d" stroke-width="4"/>
+                                <path d="M 150 90 L 150 270" stroke="#450a0a" stroke-width="8"/>
+                                <path d="M 60 150 L 240 150" stroke="#450a0a" stroke-width="6"/>
+
+                                <!-- Clickable Heart Parts -->
+                                <!-- Vena Kava -->
+                                <rect x="30" y="30" width="25" height="70" rx="6" fill="#0284c7" class="cursor-pointer hover:fill-sky-400 transition" onclick="showHeartDetail('venaKava')"/>
+                                <text x="20" y="25" fill="#38bdf8" font-size="10" font-weight="bold">Vena Kava</text>
+
+                                <!-- Aorta -->
+                                <path d="M 140 20 Q 150 5, 165 20 L 165 85 L 140 85 Z" fill="#dc2626" class="cursor-pointer hover:fill-rose-400 transition" onclick="showHeartDetail('aorta')"/>
+                                <text x="142" y="14" fill="#f87171" font-size="10" font-weight="bold">Aorta</text>
+
+                                <!-- Arteri Pulmonalis -->
+                                <rect x="85" y="45" width="20" height="50" rx="4" fill="#0284c7" class="cursor-pointer hover:fill-sky-400 transition" onclick="showHeartDetail('arteriPulmonalis')"/>
+                                <text x="75" y="40" fill="#38bdf8" font-size="9" font-weight="bold">Art. Pulmonalis</text>
+
+                                <!-- Vena Pulmonalis -->
+                                <rect x="195" y="55" width="20" height="40" rx="4" fill="#e11d48" class="cursor-pointer hover:fill-rose-400 transition" onclick="showHeartDetail('venaPulmonalis')"/>
+                                <text x="190" y="50" fill="#fb7185" font-size="9" font-weight="bold">Vena Pulmonalis</text>
+
+                                <!-- Atrium Kanan -->
+                                <rect x="65" y="100" width="75" height="45" rx="8" fill="#1e3a8a" class="cursor-pointer hover:fill-blue-600 transition" onclick="showHeartDetail('atriumKanan')"/>
+                                <text x="72" y="127" fill="#ffffff" font-size="10" font-weight="bold" pointer-events="none">Atrium Kanan</text>
+
+                                <!-- Ventrikel Kanan -->
+                                <rect x="65" y="160" width="75" height="75" rx="8" fill="#1d4ed8" class="cursor-pointer hover:fill-blue-500 transition" onclick="showHeartDetail('ventrikelKanan')"/>
+                                <text x="68" y="202" fill="#ffffff" font-size="10" font-weight="bold" pointer-events="none">Ventrikel Kanan</text>
+
+                                <!-- Atrium Kiri -->
+                                <rect x="160" y="100" width="75" height="45" rx="8" fill="#9f1239" class="cursor-pointer hover:fill-rose-600 transition" onclick="showHeartDetail('atriumKiri')"/>
+                                <text x="170" y="127" fill="#ffffff" font-size="10" font-weight="bold" pointer-events="none">Atrium Kiri</text>
+
+                                <!-- Ventrikel Kiri -->
+                                <rect x="160" y="160" width="75" height="75" rx="8" fill="#be123c" class="cursor-pointer hover:fill-rose-500 transition" onclick="showHeartDetail('ventrikelKiri')"/>
+                                <text x="165" y="202" fill="#ffffff" font-size="10" font-weight="bold" pointer-events="none">Ventrikel Kiri</text>
+
+                                <!-- Valves -->
+                                <circle cx="102" cy="150" r="6" fill="#f59e0b" class="cursor-pointer hover:scale-125 transition" onclick="showHeartDetail('katupTrikuspid')"/>
+                                <circle cx="197" cy="150" r="6" fill="#f59e0b" class="cursor-pointer hover:scale-125 transition" onclick="showHeartDetail('katupBikuspid')"/>
+                            </svg>
+                        </div>
+                        <span class="text-xs text-slate-400 mt-2"><i class="fa-solid fa-hand-pointer text-amber-400 mr-1"></i> Klik bagian berwarna pada gambar jantung</span>
+                    </div>
+
+                    <!-- Heart Details Card -->
+                    <div class="lg:col-span-6">
+                        <div id="heart-info-card" class="glass-card p-6 rounded-2xl border-l-4 border-rose-500 min-h-[260px]">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-10 h-10 rounded-lg bg-rose-600/30 text-rose-400 flex items-center justify-center text-xl font-bold">
+                                    <i class="fa-solid fa-heart"></i>
+                                </div>
+                                <div>
+                                    <h3 id="heart-title" class="title-font text-xl font-bold text-white">Anatomi Jantung</h3>
+                                    <span id="heart-subtitle" class="text-xs text-slate-400">Pompa Otot Utama Tubuh</span>
+                                </div>
+                            </div>
+                            <p id="heart-desc" class="text-slate-300 text-sm leading-relaxed mb-4">
+                                Jantung manusia memiliki 4 ruang (Atrium Kanan, Atrium Kiri, Ventrikel Kanan, Ventrikel Kiri) serta dibantu katup untuk mencegah aliran balik darah.
+                            </p>
+                            <div id="heart-blood-type" class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 text-xs text-slate-300 flex items-center gap-2">
+                                <i class="fa-solid fa-circle-info text-blue-400"></i>
+                                <span>Pilih bagian jantung untuk melihat detail fungsinya!</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= MISI 3: SIMULASI CANVAS PEREDARAN DARAH ================= -->
+        <section id="screen-misi3" class="screen-view hidden">
+            <div class="glass-panel p-6 rounded-3xl">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 pb-3 border-b border-slate-700 gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-red-400 uppercase tracking-widest">Misi 3 dari 6 (Simulasi Utama)</span>
+                        <h2 class="title-font text-2xl md:text-3xl font-bold text-white">Simulasi Peredaran Darah Manusia</h2>
+                        <p class="text-slate-300 text-sm">Amati titik-titik darah bergerak kontinu pada jalur peredaran darah ganda dan tertutup.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="switchMission('misi2')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs sm:text-sm">
+                            <i class="fa-solid fa-arrow-left"></i> Kembali
+                        </button>
+                        <button onclick="markMissionComplete('misi3', 'misi4')" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center gap-2 shadow-lg">
+                            Lanjut Misi 4 <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Simulation Mode Controls -->
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4 bg-slate-900/80 p-3 rounded-2xl border border-slate-800">
+                    <div class="flex items-center gap-2">
+                        <button id="sim-mode-both" onclick="setSimMode('both')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-600 text-white shadow">
+                            Sirkulasi Ganda (Lengkap)
+                        </button>
+                        <button id="sim-mode-kecil" onclick="setSimMode('kecil')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700">
+                            Peredaran Kecil (Pulmonal)
+                        </button>
+                        <button id="sim-mode-besar" onclick="setSimMode('besar')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700">
+                            Peredaran Besar (Sistemik)
+                        </button>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button onclick="toggleSimPlay()" id="sim-play-btn" class="px-4 py-1.5 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg text-xs flex items-center gap-1.5">
+                            <i id="sim-play-icon" class="fa-solid fa-pause"></i> <span id="sim-play-text">PAUSE</span>
+                        </button>
+                        <button onclick="resetSim()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold rounded-lg text-xs flex items-center gap-1">
+                            <i class="fa-solid fa-rotate-left"></i> RESET
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Canvas + Info Overlay -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                    <div class="lg:col-span-8 bg-slate-950 rounded-2xl p-2 border border-slate-800 relative overflow-hidden flex justify-center items-center min-h-[380px]">
+                        <canvas id="bloodSimCanvas" width="600" height="400" class="w-full max-w-[600px] h-auto rounded-xl bg-slate-950"></canvas>
+                    </div>
+
+                    <div class="lg:col-span-4 flex flex-col gap-4">
+                        <div class="glass-card p-5 rounded-2xl border-l-4 border-blue-500">
+                            <h3 class="title-font text-lg font-bold text-white mb-2 flex items-center gap-2">
+                                <i class="fa-solid fa-circle-nodes text-blue-400"></i> Keterangan Aliran Darah
+                            </h3>
+                            <div class="space-y-3 text-xs leading-relaxed text-slate-300">
+                                <div class="flex items-start gap-2">
+                                    <span class="w-3 h-3 rounded-full bg-red-500 mt-1 flex-shrink-0"></span>
+                                    <span><strong class="text-red-400">Warna Merah:</strong> Darah kaya oksigen (O₂) setelah dari paru-paru.</span>
+                                </div>
+                                <div class="flex items-start gap-2">
+                                    <span class="w-3 h-3 rounded-full bg-blue-500 mt-1 flex-shrink-0"></span>
+                                    <span><strong class="text-blue-400">Warna Biru:</strong> Darah kaya karbon dioksida (CO₂) dari tubuh.</span>
+                                </div>
+                                <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800 mt-2">
+                                    <strong class="text-amber-400 block mb-1"><i class="fa-solid fa-lightbulb mr-1"></i> Pertukaran Gas:</strong>
+                                    - Di **Paru-paru**: CO₂ dilepas, O₂ diikat (Biru &rarr; Merah).<br>
+                                    - Di **Seluruh Tubuh**: O₂ dilepas ke sel, CO₂ diikat (Merah &rarr; Biru).
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= MISI 4: GAME DRAG AND DROP ================= -->
+        <section id="screen-misi4" class="screen-view hidden">
+            <div class="glass-panel p-6 rounded-3xl">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-4 border-b border-slate-700 gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-red-400 uppercase tracking-widest">Misi 4 dari 6</span>
+                        <h2 class="title-font text-2xl md:text-3xl font-bold text-white">Susun Jalur Peredaran Darah</h2>
+                        <p class="text-slate-300 text-sm">Geser (Drag) kartu organ di bawah dan letakkan di kotak urutan yang benar!</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="switchMission('misi3')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-sm transition">
+                            <i class="fa-solid fa-arrow-left"></i> Kembali
+                        </button>
+                        <button onclick="markMissionComplete('misi4', 'misi5')" class="px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl text-sm transition flex items-center gap-2 shadow-lg">
+                            Lanjut Misi 5 <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stage Selection & Feedback -->
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                    <div class="flex gap-2">
+                        <button id="dnd-tab-kecil" onclick="setupDnDStage('kecil')" class="px-4 py-3 bg-red-600 text-white font-bold rounded-xl text-xs sm:text-sm shadow-md">
+                            Tantangan 1: Peredaran Kecil
+                        </button>
+                        <button id="dnd-tab-besar" onclick="setupDnDStage('besar')" class="px-4 py-3 bg-slate-800 text-slate-300 hover:bg-slate-700 font-bold rounded-xl text-xs sm:text-sm border border-slate-700">
+                            Tantangan 2: Peredaran Besar
+                        </button>
+                    </div>
+                    <div id="dnd-feedback" class="text-xs sm:text-sm font-bold text-amber-400">
+                        <!-- Dynamic Feedback Message -->
+                    </div>
+                </div>
+
+                <div class="bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-xl mb-4 text-xs text-amber-300 flex items-center gap-2">
+                    <i class="fa-solid fa-hand-pointer text-amber-400"></i>
+                    <span><strong>Petunjuk IFP/Smartboard:</strong> Ketuk kartu organ di bawah, lalu ketuk kotak nomor tujuan untuk memasukkannya secara cepat!</span>
+                </div>
+
+                <!-- Drop Targets Slots -->
+                <div class="mb-8">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Kotak Urutan Jalur:</h3>
+                    <div id="dnd-slots-container" class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                        <!-- Slots generated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Available Cards Deck -->
+                <div class="bg-slate-900/80 p-5 rounded-2xl border border-slate-800">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Kartu Organ Yang Tersedia (Pilih/Ketuk):</h3>
+                    <div id="dnd-cards-container" class="flex flex-wrap gap-3 min-h-[60px] items-center">
+                        <!-- Draggable cards generated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= MISI 5: GAME PETUALANGAN SEL DARAH ================= -->
+        <section id="screen-misi5" class="screen-view hidden">
+            <div class="glass-panel p-6 rounded-3xl">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-4 border-b border-slate-700 gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-red-400 uppercase tracking-widest">Misi 5 dari 6</span>
+                        <h2 class="title-font text-2xl md:text-3xl font-bold text-white">Jadilah Sel Darah Merah!</h2>
+                        <p class="text-slate-300 text-sm">Bantu Ery (Sel Darah Merah) menjelajahi peta tubuh dengan menjawab pertanyaan!</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="switchMission('misi4')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-sm transition">
+                            <i class="fa-solid fa-arrow-left"></i> Kembali
+                        </button>
+                        <button onclick="markMissionComplete('misi5', 'misi6')" class="px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl text-sm transition flex items-center gap-2 shadow-lg">
+                            Lanjut Misi 6 <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Adventure Map Display & Quiz Step Container -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                    <!-- Map / Path Track -->
+                    <div class="lg:col-span-5 bg-slate-900/90 p-4 rounded-2xl border border-slate-800 flex flex-col items-center">
+                        <div class="text-xs font-bold text-slate-400 mb-3 uppercase tracking-wider">Peta Perjalanan Ery</div>
+                        
+                        <div class="w-full flex flex-col items-center gap-3">
+                            <div id="adv-step-0" class="adv-node w-full p-3 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-between text-xs">
+                                <span>1. Start: Bilik Kanan</span>
+                                <i class="fa-solid fa-heart text-red-500"></i>
+                            </div>
+                            <i class="fa-solid fa-arrow-down text-slate-600 text-xs"></i>
+
+                            <div id="adv-step-1" class="adv-node w-full p-3 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-between text-xs">
+                                <span>2. Paru-Paru (Ambil O₂)</span>
+                                <i class="fa-solid fa-lungs text-blue-400"></i>
+                            </div>
+                            <i class="fa-solid fa-arrow-down text-slate-600 text-xs"></i>
+
+                            <div id="adv-step-2" class="adv-node w-full p-3 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-between text-xs">
+                                <span>3. Serambi & Bilik Kiri</span>
+                                <i class="fa-solid fa-heart-pulse text-rose-400"></i>
+                            </div>
+                            <i class="fa-solid fa-arrow-down text-slate-600 text-xs"></i>
+
+                            <div id="adv-step-3" class="adv-node w-full p-3 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-between text-xs">
+                                <span>4. Seluruh Jaringan Tubuh</span>
+                                <i class="fa-solid fa-child text-amber-400"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Adventure Question Card -->
+                    <div class="lg:col-span-7">
+                        <div class="glass-card p-6 rounded-2xl border-l-4 border-amber-500">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-12 h-12 rounded-full bg-red-600 text-white flex items-center justify-center text-xl font-bold animate-bounce">
+                                    <i class="fa-solid fa-droplet"></i>
+                                </div>
+                                <div>
+                                    <h3 id="adv-q-title" class="title-font text-lg font-bold text-white">Pos Perjalanan Ery</h3>
+                                    <span id="adv-q-sub" class="text-xs text-amber-400 font-semibold">Tantangan Kuis Petualangan</span>
+                                </div>
+                            </div>
+
+                            <p id="adv-question-text" class="text-sm md:text-base text-slate-200 mb-6 leading-relaxed">
+                                Loading pertanyaan...
+                            </p>
+
+                            <div id="adv-options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                                <!-- Option buttons loaded dynamically -->
+                            </div>
+
+                            <div id="adv-feedback" class="text-xs font-semibold p-3 rounded-xl hidden"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= MISI 6: QUIZ SYSTEM ================= -->
+        <section id="screen-misi6" class="screen-view hidden">
+            <div class="glass-panel p-6 rounded-3xl">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-4 border-b border-slate-700 gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-red-400 uppercase tracking-widest">Misi 6 dari 6</span>
+                        <h2 class="title-font text-2xl md:text-3xl font-bold text-white">Blood Circulation Quiz</h2>
+                        <p class="text-slate-300 text-sm">Uji Pemahamanmu dengan 10 Soal Pilihan Ganda Interaktif!</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span id="quiz-counter" class="text-xs bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700 text-slate-300 font-bold">
+                            Soal 1 / 10
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Quiz Card -->
+                <div class="max-w-3xl mx-auto glass-card p-6 md:p-8 rounded-2xl border-t-4 border-red-500">
+                    <p id="quiz-question" class="text-base md:text-lg font-semibold text-white mb-6 leading-relaxed">
+                        Pertanyaan Kuis...
+                    </p>
+
+                    <div id="quiz-options" class="space-y-3 mb-6">
+                        <!-- Options generated dynamically -->
+                    </div>
+
+                    <div id="quiz-explanation" class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-slate-300 mb-6 hidden">
+                        <!-- Explanation -->
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button id="quiz-next-btn" onclick="nextQuizQuestion()" class="hidden px-6 py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl text-sm transition shadow-lg">
+                            Soal Berikutnya <i class="fa-solid fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= SCREEN FINISH: FINAL SCORE & CERTIFICATE ================= -->
+        <section id="screen-finish" class="screen-view hidden flex flex-col items-center justify-center text-center py-6">
+            <div class="max-w-2xl glass-panel p-8 md:p-12 rounded-3xl shadow-2xl border border-slate-700/50 text-center relative overflow-hidden">
+                <div class="w-24 h-24 bg-gradient-to-tr from-amber-500 to-yellow-300 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl text-slate-950 text-4xl font-bold animate-bounce">
+                    <i class="fa-solid fa-award"></i>
+                </div>
+
+                <h2 class="title-font text-3xl md:text-4xl font-extrabold text-white mb-2">SELAMAT! PETUALANGAN SELESAI</h2>
+                <p class="text-slate-300 text-sm md:text-base mb-6">Kamu telah berhasil menyelesaikan seluruh Misi Pembelajaran Sistem Peredaran Darah Manusia!</p>
+
+                <!-- Stats summary -->
+                <div class="grid grid-cols-2 gap-4 max-w-md mx-auto mb-8">
+                    <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
+                        <span class="text-xs text-slate-400 block mb-1">Total Skor Anda:</span>
+                        <span id="final-score" class="text-3xl font-extrabold text-amber-400">100</span>
+                    </div>
+                    <div class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
+                        <span class="text-xs text-slate-400 block mb-1">Predikat / Lencana:</span>
+                        <span id="final-badge" class="text-sm font-bold text-rose-400 block mt-2">Blood Circulation Explorer</span>
+                    </div>
+                </div>
+
+                <p id="final-motivation" class="text-xs text-slate-300 italic mb-8 max-w-md mx-auto">
+                    "Kerja bagus! Teruslah bersemangat menjelajahi keajaiban sains dan tubuh manusia."
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button onclick="restartGame()" class="px-8 py-3.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-2xl shadow-lg transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-rotate-left"></i> MAIN LAGI
+                    </button>
+                    <button onclick="switchMission('misi3')" class="px-6 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-2xl border border-slate-700 transition">
+                        Lihat Simulasi Lagi
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER BAR -->
+    <footer class="w-full glass-panel py-3 px-4 text-center text-xs text-slate-400 border-t border-slate-800">
+        <p>Media Pembelajaran IPA Kelas 8 • Developed by <strong class="text-slate-200">NISA FATHIN MUSLIMAH</strong></p>
+    </footer>
+
+
+    <!-- INSTRUCTIONS MODAL -->
+    <div id="instructions-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="max-w-md w-full glass-panel p-6 rounded-3xl border border-slate-700 relative">
+            <button onclick="closeModal('instructions-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <h3 class="title-font text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-circle-info text-blue-400"></i> Petunjuk Permainan
+            </h3>
+            <ul class="text-xs text-slate-300 space-y-2.5 mb-6 leading-relaxed">
+                <li class="flex items-start gap-2"><i class="fa-solid fa-check text-green-400 mt-0.5"></i> <span><strong>Misi 1 & 2:</strong> Klik organ tubuh & jantung untuk mempelajari struktur dan fungsinya.</span></li>
+                <li class="flex items-start gap-2"><i class="fa-solid fa-check text-green-400 mt-0.5"></i> <span><strong>Misi 3:</strong> Amati pergerakan titik darah merah (kaya O₂) dan biru (kaya CO₂) pada simulasi.</span></li>
+                <li class="flex items-start gap-2"><i class="fa-solid fa-check text-green-400 mt-0.5"></i> <span><strong>Misi 4:</strong> Geser (Drag & drop) kartu organ ke urutan sirkulasi darah yang tepat.</span></li>
+                <li class="flex items-start gap-2"><i class="fa-solid fa-check text-green-400 mt-0.5"></i> <span><strong>Misi 5 & 6:</strong> Jawab tantangan petualangan & kuis 10 soal untuk mengumpulkan skor maksimal!</span></li>
+            </ul>
+            <button onclick="closeModal('instructions-modal')" class="w-full py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl text-xs transition">
+                Mengerti & Tutup
+            </button>
+        </div>
+    </div>
+
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        /* ================= GLOBAL GAME STATE ================= */
+        let gameState = {
+            score: 0,
+            completedMissions: new Set(),
+            soundEnabled: true,
+            currentMission: 'home',
+            organsExplored: new Set()
+        };
+
+        /* Synthesized Web Audio API Sound Effects */
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if (!gameState.soundEnabled) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'correct') {
+                    osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+                    osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1); // A5
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+                } else if (type === 'wrong') {
+                    osc.frequency.setValueAtTime(220, audioCtx.currentTime); // A3
+                    osc.frequency.setValueAtTime(164.81, audioCtx.currentTime + 0.15); // E3
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.35);
+                } else if (type === 'click') {
+                    osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.08);
+                }
+            } catch (e) {
+                console.log("Audio play error", e);
+            }
+        }
+
+        function toggleSound() {
+            gameState.soundEnabled = !gameState.soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            if (gameState.soundEnabled) {
+                icon.className = 'fa-solid fa-volume-high text-green-400';
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark text-slate-500';
+            }
+        }
+
+        function addScore(points) {
+            gameState.score += points;
+            document.getElementById('player-score').innerText = gameState.score;
+        }
+
+        function switchMission(missionId) {
+            playSound('click');
+            document.querySelectorAll('.screen-view').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById(`screen-${missionId}`);
+            if (target) {
+                target.classList.remove('hidden');
+                gameState.currentMission = missionId;
+            }
+
+            // Top Bar display toggle
+            const topBar = document.getElementById('top-bar-stats');
+            if (missionId === 'home') {
+                topBar.classList.add('hidden');
+            } else {
+                topBar.classList.remove('hidden');
+            }
+
+            // Initialize mission-specific scripts
+            if (missionId === 'misi3') initSimulation();
+            if (missionId === 'misi4') setupDnDStage('kecil');
+            if (missionId === 'misi5') initAdventureGame();
+            if (missionId === 'misi6') initQuiz();
+            if (missionId === 'finish') renderFinishScreen();
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function markMissionComplete(currentMissionId, nextMissionId) {
+            if (!gameState.completedMissions.has(currentMissionId)) {
+                gameState.completedMissions.add(currentMissionId);
+                addScore(50);
+                document.getElementById('missions-completed-count').innerText = `${gameState.completedMissions.size}/6`;
+            }
+            if (nextMissionId) {
+                switchMission(nextMissionId);
+            }
+        }
+
+        function openModal(id) {
+            playSound('click');
+            document.getElementById(id).classList.remove('hidden');
+        }
+        function closeModal(id) {
+            playSound('click');
+            document.getElementById(id).classList.add('hidden');
+        }
+
+
+        /* ================= MISI 1: ORGAN PEREDARAN DARAH DATA ================= */
+        const organData = {
+            jantung: {
+                title: "Jantung (Heart)",
+                subtitle: "Organ Pemompa Darah Utama",
+                desc: "Jantung merupakan organ berotot yang berfungsi memompa darah ke seluruh tubuh. Terbagi menjadi 4 ruangan: Serambi Kanan, Serambi Kiri, Bilik Kanan, dan Bilik Kiri.",
+                icon: "fa-heart-pulse",
+                color: "text-red-500"
+            },
+            arteri: {
+                title: "Pembuluh Darah Arteri (Nadi)",
+                subtitle: "Membawa Darah Keluar Dari Jantung",
+                desc: "Arteri memiliki dinding tebal, elastis, dan kuat. Umumnya membawa darah yang kaya akan Oksigen (O₂) dari jantung menuju ke seluruh jaringan tubuh (kecuali Arteri Pulmonalis).",
+                icon: "fa-circle-right",
+                color: "text-rose-400"
+            },
+            vena: {
+                title: "Pembuluh Darah Vena (Balik)",
+                subtitle: "Membawa Darah Kembali Ke Jantung",
+                desc: "Vena memiliki dinding lebih tipis dan katup di sepanjang pembuluh. Mencegah darah mengalir balik dan membawa darah kaya CO₂ dari sel tubuh kembali ke jantung.",
+                icon: "fa-circle-left",
+                color: "text-blue-400"
+            },
+            kapiler: {
+                title: "Pembuluh Kapiler",
+                subtitle: "Tempat Pertukaran Zat & Gas",
+                desc: "Pembuluh sangat kecil dan halus yang menghubungkan arteri dan vena. Di sinilah terjadi pertukaran oksigen, nutrisi, dan sisa metabolisme dengan sel tubuh.",
+                icon: "fa-diagram-project",
+                color: "text-purple-400"
+            },
+            darah: {
+                title: "Darah (Blood)",
+                subtitle: "Cairan Transpor Tubuh",
+                desc: "Terdiri atas Plasma Darah (55%) dan Sel-Sel Darah (45%): Sel Darah Merah/Eritrosit (pengangkut O₂), Sel Darah Putih/Leukosit (imunitas), dan Keping Darah/Trombosit (pembekuan).",
+                icon: "fa-droplet",
+                color: "text-red-600"
+            }
+        };
+
+        function showOrganDetail(key) {
+            playSound('click');
+            const data = organData[key];
+            if (!data) return;
+
+            document.getElementById('organ-title').innerText = data.title;
+            document.getElementById('organ-subtitle').innerText = data.subtitle;
+            document.getElementById('organ-desc').innerText = data.desc;
+            document.getElementById('organ-icon').innerHTML = `<i class="fa-solid ${data.icon} ${data.color}"></i>`;
+
+            gameState.organsExplored.add(key);
+            const checkEl = document.getElementById(`check-${key}`);
+            if (checkEl) {
+                checkEl.className = "text-xs px-2.5 py-1 rounded-lg bg-green-900/60 text-green-300 border border-green-700 font-bold";
+                checkEl.innerHTML = `<i class="fa-solid fa-circle-check text-green-400 mr-1"></i> ${key.charAt(0).toUpperCase() + key.slice(1)}`;
+            }
+        }
+
+
+        /* ================= MISI 2: HEART DETAILS DATA ================= */
+        const heartData = {
+            atriumKanan: { title: "Serambi Kanan (Atrium Kanan)", desc: "Menerima darah kaya Karbon Dioksida (CO₂) dari seluruh tubuh melalui Vena Kava.", type: "Darah Miskin Oksigen (CO₂)" },
+            ventrikelKanan: { title: "Bilik Kanan (Ventrikel Kanan)", desc: "Memompa darah kaya CO₂ menuju ke paru-paru melalui Arteri Pulmonalis.", type: "Darah Miskin Oksigen (CO₂)" },
+            atriumKiri: { title: "Serambi Kiri (Atrium Kiri)", desc: "Menerima darah kaya Oksigen (O₂) dari paru-paru melalui Vena Pulmonalis.", type: "Darah Kaya Oksigen (O₂)" },
+            ventrikelKiri: { title: "Bilik Kiri (Ventrikel Kiri)", desc: "Dinding paling tebal! Memompa darah kaya Oksigen (O₂) ke seluruh tubuh melalui Aorta.", type: "Darah Kaya Oksigen (O₂)" },
+            venaKava: { title: "Vena Kava", desc: "Pembuluh vena terbesar yang membawa darah kaya CO₂ dari tubuh masuk ke Atrium Kanan.", type: "Pembuluh Darah" },
+            aorta: { title: "Aorta", desc: "Pembuluh arteri terbesar yang mengalirkan darah kaya O₂ dari Ventrikel Kiri ke seluruh tubuh.", type: "Pembuluh Darah Utama" },
+            arteriPulmonalis: { title: "Arteri Pulmonalis", desc: "Membawa darah kaya CO₂ dari Ventrikel Kanan menuju Paru-paru.", type: "Pengecualian Arteri" },
+            venaPulmonalis: { title: "Vena Pulmonalis", desc: "Membawa darah kaya O₂ dari Paru-paru menuju ke Atrium Kiri.", type: "Pengecualian Vena" },
+            katupTrikuspid: { title: "Katup Trikuspidalis", desc: "Katup antara Atrium Kanan dan Ventrikel Kanan. Mencegah darah kembali ke Atrium.", type: "Katup Jantung" },
+            katupBikuspid: { title: "Katup Bikuspidalis (Mitral)", desc: "Katup antara Atrium Kiri dan Ventrikel Kiri. Menjaga aliran darah satu arah.", type: "Katup Jantung" }
+        };
+
+        function showHeartDetail(key) {
+            playSound('click');
+            const data = heartData[key];
+            if (!data) return;
+
+            document.getElementById('heart-title').innerText = data.title;
+            document.getElementById('heart-desc').innerText = data.desc;
+            document.getElementById('heart-blood-type').innerHTML = `<i class="fa-solid fa-droplet text-red-400"></i> <span>Kategori: <strong>${data.type}</strong></span>`;
+        }
+
+
+        /* ================= MISI 3: CANVAS ANIMATION SIMULATION ================= */
+        let simCanvas, simCtx;
+        let simAnimationId;
+        let simIsRunning = true;
+        let simMode = 'both'; // 'both', 'kecil', 'besar'
+        let particles = [];
+
+        function initSimulation() {
+            simCanvas = document.getElementById('bloodSimCanvas');
+            if (!simCanvas) return;
+            simCtx = simCanvas.getContext('2d');
+
+            // Initialize Particles
+            particles = [];
+            for (let i = 0; i < 28; i++) {
+                particles.push({
+                    progress: (i / 28),
+                    speed: 0.003
+                });
+            }
+
+            if (simAnimationId) cancelAnimationFrame(simAnimationId);
+            simLoop();
+        }
+
+        function setSimMode(mode) {
+            playSound('click');
+            simMode = mode;
+            ['both', 'kecil', 'besar'].forEach(m => {
+                const btn = document.getElementById(`sim-mode-${m}`);
+                if (btn) {
+                    if (m === mode) {
+                        btn.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-red-600 text-white shadow";
+                    } else {
+                        btn.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700";
+                    }
+                }
+            });
+        }
+
+        function toggleSimPlay() {
+            playSound('click');
+            simIsRunning = !simIsRunning;
+            const text = document.getElementById('sim-play-text');
+            const icon = document.getElementById('sim-play-icon');
+            if (simIsRunning) {
+                text.innerText = "PAUSE";
+                icon.className = "fa-solid fa-pause";
+                simLoop();
+            } else {
+                text.innerText = "PLAY";
+                icon.className = "fa-solid fa-play";
+            }
+        }
+
+        function resetSim() {
+            playSound('click');
+            particles.forEach((p, idx) => p.progress = (idx / particles.length));
+        }
+
+        // Circuit Math Parametric Curves
+        function getCirculationPoint(t, mode) {
+            // Center Canvas 300, 200
+            // Top Loop = Paru-paru (Pulmonal)
+            // Bottom Loop = Seluruh Tubuh (Sistemik)
+            let x = 300;
+            let y = 200;
+            let isOxygenated = false;
+
+            if (mode === 'kecil') {
+                // Top loop only
+                let angle = t * Math.PI * 2;
+                x = 300 + Math.sin(angle) * 120;
+                y = 200 - (1 - Math.cos(angle)) * 75;
+                isOxygenated = (angle > Math.PI); // After lungs
+            } else if (mode === 'besar') {
+                // Bottom loop only
+                let angle = t * Math.PI * 2;
+                x = 300 + Math.sin(angle) * 140;
+                y = 200 + (1 - Math.cos(angle)) * 80;
+                isOxygenated = (angle < Math.PI); // From left ventricle
+            } else {
+                // Figure 8 Circulation
+                let angle = t * Math.PI * 2;
+                x = 300 + Math.sin(angle) * 130;
+                y = 200 - Math.sin(2 * angle) * 90;
+                
+                // Color switch based on upper/lower transit
+                isOxygenated = (Math.cos(angle) < 0);
+            }
+
+            return { x, y, isOxygenated };
+        }
+
+        function simLoop() {
+            if (!simCtx) return;
+
+            // Clear Background
+            simCtx.fillStyle = '#020617';
+            simCtx.fillRect(0, 0, simCanvas.width, simCanvas.height);
+
+            // 1. Draw Organ Nodes & Connectors
+            // Lungs (Top)
+            simCtx.fillStyle = '#1e3a8a';
+            simCtx.beginPath();
+            simCtx.arc(300, 50, 35, 0, Math.PI * 2);
+            simCtx.fill();
+            simCtx.fillStyle = '#ffffff';
+            simCtx.font = 'bold 11px Inter';
+            simCtx.textAlign = 'center';
+            simCtx.fillText('PARU-PARU', 300, 54);
+
+            // Heart (Center)
+            simCtx.fillStyle = '#991b1b';
+            simCtx.beginPath();
+            simCtx.arc(300, 200, 42, 0, Math.PI * 2);
+            simCtx.fill();
+            simCtx.fillStyle = '#ffffff';
+            simCtx.fillText('JANTUNG', 300, 204);
+
+            // Body Tissues (Bottom)
+            simCtx.fillStyle = '#854d0e';
+            simCtx.beginPath();
+            simCtx.arc(300, 350, 35, 0, Math.PI * 2);
+            simCtx.fill();
+            simCtx.fillStyle = '#ffffff';
+            simCtx.fillText('TUBUH', 300, 354);
+
+            // 2. Draw Circuit Track Lines
+            simCtx.lineWidth = 6;
+            simCtx.strokeStyle = 'rgba(255,255,255,0.1)';
+            simCtx.beginPath();
+            for (let t = 0; t <= 1; t += 0.01) {
+                let pt = getCirculationPoint(t, simMode);
+                if (t === 0) simCtx.moveTo(pt.x, pt.y);
+                else simCtx.lineTo(pt.x, pt.y);
+            }
+            simCtx.stroke();
+
+            // 3. Update & Draw Blood Particles
+            particles.forEach(p => {
+                if (simIsRunning) {
+                    p.progress += p.speed;
+                    if (p.progress > 1) p.progress -= 1;
+                }
+
+                let pt = getCirculationPoint(p.progress, simMode);
+
+        /* ================= MISI 4: DRAG AND DROP & IFP TAP LOGIC ================= */
+        const dndData = {
+            kecil: {
+                title: "Peredaran Darah Kecil (Pulmonal)",
+                correctOrder: ["Bilik Kanan", "Arteri Pulmonalis", "Paru-Paru", "Vena Pulmonalis", "Serambi Kiri"],
+                cards: ["Bilik Kanan", "Paru-Paru", "Serambi Kiri", "Arteri Pulmonalis", "Vena Pulmonalis"]
+            },
+            besar: {
+                title: "Peredaran Darah Besar (Sistemik)",
+                correctOrder: ["Bilik Kiri", "Aorta", "Seluruh Tubuh", "Vena Kava", "Serambi Kanan"],
+                cards: ["Aorta", "Bilik Kiri", "Serambi Kanan", "Seluruh Tubuh", "Vena Kava"]
+            }
+        };
+
+        let currentDnDStage = 'kecil';
+        let userDnDState = [];
+        let selectedIfpCard = null;
+
+        function setupDnDStage(stageKey) {
+            currentDnDStage = stageKey;
+            selectedIfpCard = null;
+            const data = dndData[stageKey];
+            userDnDState = new Array(data.correctOrder.length).fill(null);
+
+            // Button active styling
+            document.getElementById('dnd-tab-kecil').className = stageKey === 'kecil' ? "px-4 py-3 bg-red-600 text-white font-bold rounded-xl text-xs sm:text-sm shadow-md" : "px-4 py-3 bg-slate-800 text-slate-300 hover:bg-slate-700 font-bold rounded-xl text-xs sm:text-sm border border-slate-700";
+            document.getElementById('dnd-tab-besar').className = stageKey === 'besar' ? "px-4 py-3 bg-red-600 text-white font-bold rounded-xl text-xs sm:text-sm shadow-md" : "px-4 py-3 bg-slate-800 text-slate-300 hover:bg-slate-700 font-bold rounded-xl text-xs sm:text-sm border border-slate-700";
+
+            document.getElementById('dnd-feedback').innerText = "";
+
+            renderDnDSlots();
+            renderDnDCards();
+        }
+
+        function renderDnDSlots() {
+            const container = document.getElementById('dnd-slots-container');
+            container.innerHTML = "";
+            const data = dndData[currentDnDStage];
+
+            data.correctOrder.forEach((_, idx) => {
+                const filled = userDnDState[idx];
+                const slot = document.createElement('div');
+                slot.className = `drop-target p-3 min-h-[70px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center text-center transition cursor-pointer ${filled ? 'border-red-500 bg-red-950/40' : 'border-slate-700 bg-slate-900/60 hover:border-slate-500'}`;
+                
+                slot.ondragover = (e) => { e.preventDefault(); slot.classList.add('drag-over'); };
+                slot.ondragleave = () => slot.classList.remove('drag-over');
+                slot.ondrop = (e) => {
+                    e.preventDefault();
+                    slot.classList.remove('drag-over');
+                    const cardText = e.dataTransfer.getData('text/plain');
+                    placeCardInSlot(cardText, idx);
+                };
+
+                // IFP Tap to Place
+                slot.onclick = () => {
+                    if (selectedIfpCard) {
+                        placeCardInSlot(selectedIfpCard, idx);
+                        selectedIfpCard = null;
+                        renderDnDCards();
+                    }
+                };
+
+                if (filled) {
+                    slot.innerHTML = `<span class="text-xs font-bold text-slate-100 mb-1">${idx + 1}. ${filled}</span>
+                    <button onclick="event.stopPropagation(); removeCardFromSlot(${idx})" class="text-[11px] px-2 py-0.5 bg-red-900/80 rounded text-red-200 hover:text-white mt-1">Hapus</button>`;
+                } else {
+                    slot.innerHTML = `<span class="text-xs text-slate-400 font-semibold">${idx + 1}. [Kosong]</span>`;
+                }
+                container.appendChild(slot);
+            });
+        }
+
+        function renderDnDCards() {
+            const container = document.getElementById('dnd-cards-container');
+            container.innerHTML = "";
+            const data = dndData[currentDnDStage];
+
+            data.cards.forEach(cardText => {
+                if (!userDnDState.includes(cardText)) {
+                    const card = document.createElement('div');
+                    card.draggable = true;
+                    const isSelected = (selectedIfpCard === cardText);
+                    card.className = `draggable-item px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs sm:text-sm font-bold text-white shadow-md flex items-center gap-2 cursor-pointer transition ${isSelected ? 'card-selected-ifp' : ''}`;
+                    card.innerHTML = `<i class="fa-solid fa-hand-pointer ${isSelected ? 'text-amber-400' : 'text-slate-500'}"></i> ${cardText}`;
+
+                    card.ondragstart = (e) => {
+                        e.dataTransfer.setData('text/plain', cardText);
+                    };
+
+                    // IFP Smartboard Touch Selection
+                    card.onclick = () => {
+                        playSound('click');
+                        if (selectedIfpCard === cardText) {
+                            selectedIfpCard = null;
+                        } else {
+                            selectedIfpCard = cardText;
+                        }
+                        renderDnDCards();
+                    };
+
+                    container.appendChild(card);
+                }
+            });
+        }
+
+        function placeCardInSlot(cardText, slotIdx) {
+            playSound('click');
+            userDnDState[slotIdx] = cardText;
+            renderDnDSlots();
+            renderDnDCards();
+            checkDnDCompletion();
+        }
+
+        function removeCardFromSlot(slotIdx) {
+            playSound('click');
+            userDnDState[slotIdx] = null;
+            renderDnDSlots();
+            renderDnDCards();
+        }
+
+        function checkDnDCompletion() {
+            const data = dndData[currentDnDStage];
+            if (userDnDState.every(x => x !== null)) {
+                let isCorrect = userDnDState.every((val, idx) => val === data.correctOrder[idx]);
+                const feedback = document.getElementById('dnd-feedback');
+                if (isCorrect) {
+                    playSound('correct');
+                    feedback.className = "text-xs sm:text-sm font-bold text-green-400";
+                    feedback.innerHTML = `<i class="fa-solid fa-circle-check"></i> Hebat! Urutan Jalur ${data.title} Benar! (+30 Skor)`;
+                    addScore(30);
+                } else {
+                    playSound('wrong');
+                    feedback.className = "text-xs sm:text-sm font-bold text-red-400";
+                    feedback.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Belum tepat, coba periksa lagi urutannya!`;
+                }
+            }
+        }
+
+
+        /* ================= MISI 5: ADVENTURE GAME DATA ================= */
+        const advQuestions = [
+            {
+                q: "Ery baru saja meninggalkan Bilik Kanan dengan membawa CO₂. Ke organ manakah Ery akan pergi?",
+                options: ["Seluruh Tubuh", "Paru-Paru", "Otak", "Hati"],
+                ans: 1,
+                nodeIdx: 1
+            },
+            {
+                q: "Di paru-paru, Ery melepaskan CO₂ dan mengambil Oksigen. Pembuluh apakah yang membawa Ery kembali ke jantung?",
+                options: ["Vena Kava", "Aorta", "Vena Pulmonalis", "Arteri Pulmonalis"],
+                ans: 2,
+                nodeIdx: 2
+            },
+            {
+                q: "Ery sampai di Serambi Kiri lalu masuk ke Bilik Kiri. Ruang ini memompa Ery menuju...",
+                options: ["Seluruh Jaringan Tubuh", "Paru-paru", "Atrium Kanan", "Ginjal saja"],
+                ans: 0,
+                nodeIdx: 3
+            }
+        ];
+
+        let currentAdvStep = 0;
+
+        function initAdventureGame() {
+            currentAdvStep = 0;
+            renderAdventureStep();
+        }
+
+        function renderAdventureStep() {
+            // Update Nodes Highlight
+            for (let i = 0; i <= 3; i++) {
+                const node = document.getElementById(`adv-step-${i}`);
+                if (node) {
+                    if (i === currentAdvStep) {
+                        node.className = "adv-node w-full p-3 rounded-xl bg-red-600/30 border-2 border-red-500 font-bold text-xs text-white shadow-lg";
+                    } else if (i < currentAdvStep) {
+                        node.className = "adv-node w-full p-3 rounded-xl bg-green-900/40 border border-green-700 text-xs text-green-300";
+                    } else {
+                        node.className = "adv-node w-full p-3 rounded-xl bg-slate-800 border border-slate-700 text-xs text-slate-500";
+                    }
+                }
+            }
+
+            if (currentAdvStep >= advQuestions.length) {
+                document.getElementById('adv-question-text').innerText = "Hore! Ery telah berhasil menyelesaikan seluruh rute sirkulasi peredaran darah ganda!";
+                document.getElementById('adv-options-container').innerHTML = `<button onclick="markMissionComplete('misi5', 'misi6')" class="col-span-2 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl text-sm">Lanjut Misi 6 (Kuis)</button>`;
+                return;
+            }
+
+            const qData = advQuestions[currentAdvStep];
+            document.getElementById('adv-question-text').innerText = qData.q;
+            const container = document.getElementById('adv-options-container');
+            container.innerHTML = "";
+
+            qData.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "p-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-semibold text-slate-200 text-left transition";
+                btn.innerText = `${String.fromCharCode(65 + idx)}. ${opt}`;
+                btn.onclick = () => answerAdvQuestion(idx);
+                container.appendChild(btn);
+            });
+        }
+
+        function answerAdvQuestion(selectedIdx) {
+            const qData = advQuestions[currentAdvStep];
+            if (selectedIdx === qData.ans) {
+                playSound('correct');
+                addScore(25);
+                currentAdvStep++;
+                renderAdventureStep();
+            } else {
+                playSound('wrong');
+                const fb = document.getElementById('adv-feedback');
+                fb.className = "text-xs font-semibold p-3 rounded-xl bg-red-950/80 border border-red-700 text-red-300 block mb-3";
+                fb.innerText = "Jawaban belum tepat, yuk coba lagi!";
+            }
+        }
+
+
+        /* ================= MISI 6: QUIZ SYSTEM DATA ================= */
+        const quizData = [
+            { q: "Organ utama yang berfungsi memompa darah ke seluruh tubuh manusia adalah...", opts: ["Paru-paru", "Jantung", "Hati", "Ginjal"], ans: 1, exp: "Jantung adalah organ otot utama yang memompa darah secara terus menerus." },
+            { q: "Ruang jantung yang bertugas memompa darah kaya oksigen ke seluruh tubuh yaitu...", opts: ["Serambi Kanan", "Bilik Kanan", "Serambi Kiri", "Bilik Kiri"], ans: 3, exp: "Bilik Kiri (Ventrikel Kiri) memiliki dinding otot paling tebal untuk memompa darah ke seluruh tubuh." },
+            { q: "Pembuluh darah yang mengalirkan darah kembali menuju ke jantung dinamakan...", opts: ["Arteri", "Vena", "Kapiler", "Aorta"], ans: 1, exp: "Vena (pembuluh balik) membawa darah kembali ke jantung." },
+            { q: "Urutan jalur peredaran darah kecil (pulmonal) yang benar adalah...", opts: ["Bilik Kiri -> Aorta -> Tubuh -> Vena Kava", "Bilik Kanan -> Arteri Pulmonalis -> Paru-paru -> Vena Pulmonalis -> Serambi Kiri", "Paru-paru -> Jantung -> Tubuh", "Serambi Kanan -> Bilik Kiri -> Tubuh"], ans: 1, exp: "Peredaran darah kecil bergerak dari Jantung (Bilik Kanan) ke Paru-paru lalu kembali ke Jantung (Serambi Kiri)." },
+            { q: "Pertukaran gas oksigen (O₂) dan karbon dioksida (CO₂) di paru-paru terjadi pada...", opts: ["Bronkus", "Alveolus", "Trakea", "Jantung"], ans: 1, exp: "Alveolus adalah kantung udara halus di paru-paru tempat pertukaran gas." },
+            { q: "Warna darah merah cerah menandakan bahwa darah tersebut banyak mengandung...", opts: ["Karbon Dioksida", "Oksigen", "Urea", "Air"], ans: 1, exp: "Oksigen yang terikat pada hemoglobin memberikan warna merah cerah pada darah." },
+            { q: "Katup Trikuspidalis pada jantung terletak di antara...", opts: ["Atrium Kiri dan Ventrikel Kiri", "Atrium Kanan dan Ventrikel Kanan", "Aorta dan Vena Kava", "Jantung dan Paru-paru"], ans: 1, exp: "Katup Trikuspidalis membatasi Serambi (Atrium) Kanan dan Bilik (Ventrikel) Kanan." },
+            { q: "Komponen darah yang berperan dalam proses pembekuan darah saat luka adalah...", opts: ["Eritrosit", "Leukosit", "Trombosit", "Plasma"], ans: 2, exp: "Trombosit (keping darah) berfungsi membekukan darah dan menutup luka." },
+            { q: "Sistem peredaran darah manusia disebut tertutup karena...", opts: ["Darah selalu mengalir di dalam pembuluh darah", "Jantung terbungkus tulang dada", "Darah tidak pernah berhenti", "Darah berwarna merah"], ans: 0, exp: "Sistem tertutup artinya darah selalu mengalir di dalam sirkulasi pembuluh darah." },
+            { q: "Pembuluh darah terbesar yang keluar langsung dari bilik kiri jantung dinamakan...", opts: ["Vena Kava", "Arteri Pulmonalis", "Aorta", "Kapiler"], ans: 2, exp: "Aorta merupakan pembuluh arteri utama terbesar di dalam tubuh." }
+        ];
+
+        let currentQuizIdx = 0;
+        let quizAnswers = [];
+
+        function initQuiz() {
+            currentQuizIdx = 0;
+            quizAnswers = [];
+            renderQuizQuestion();
+        }
+
+        function renderQuizQuestion() {
+            const q = quizData[currentQuizIdx];
+            document.getElementById('quiz-counter').innerText = `Soal ${currentQuizIdx + 1} / ${quizData.length}`;
+            document.getElementById('quiz-question').innerText = `${currentQuizIdx + 1}. ${q.q}`;
+            
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = "";
+            document.getElementById('quiz-explanation').classList.add('hidden');
+            document.getElementById('quiz-next-btn').classList.add('hidden');
+
+            q.opts.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full p-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs sm:text-sm font-medium text-slate-200 text-left transition flex items-center justify-between";
+                btn.innerHTML = `<span><strong class="text-red-400 mr-2">${String.fromCharCode(65 + idx)}.</strong> ${opt}</span>`;
+                btn.onclick = () => selectQuizOption(idx);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function selectQuizOption(selectedIdx) {
+            const q = quizData[currentQuizIdx];
+            const isCorrect = (selectedIdx === q.ans);
+            
+            if (isCorrect) {
+                playSound('correct');
+                addScore(10);
+            } else {
+                playSound('wrong');
+            }
+
+            quizAnswers.push(isCorrect);
+
+            // Highlight options
+            const buttons = document.getElementById('quiz-options').children;
+            for (let i = 0; i < buttons.length; i++) {
+                buttons[i].disabled = true;
+                if (i === q.ans) {
+                    buttons[i].className = "w-full p-4 rounded-xl bg-green-950/80 border-2 border-green-500 text-xs sm:text-sm font-bold text-green-200 text-left flex items-center justify-between";
+                } else if (i === selectedIdx) {
+                    buttons[i].className = "w-full p-4 rounded-xl bg-red-950/80 border-2 border-red-500 text-xs sm:text-sm font-bold text-red-200 text-left flex items-center justify-between";
+                }
+            }
+
+            // Show explanation
+            const expBox = document.getElementById('quiz-explanation');
+            expBox.innerHTML = `<strong><i class="fa-solid fa-lightbulb text-amber-400 mr-1"></i> Penjelasan:</strong> ${q.exp}`;
+            expBox.classList.remove('hidden');
+
+            document.getElementById('quiz-next-btn').classList.remove('hidden');
+        }
+
+        function nextQuizQuestion() {
+            playSound('click');
+            currentQuizIdx++;
+            if (currentQuizIdx < quizData.length) {
+                renderQuizQuestion();
+            } else {
+                markMissionComplete('misi6', 'finish');
+            }
+        }
+
+
+        /* ================= FINISH SCREEN ================= */
+        function renderFinishScreen() {
+            document.getElementById('final-score').innerText = gameState.score;
+            
+            let badge = "Blood Circulation Explorer";
+            if (gameState.score >= 200) badge = "Master Sirkulasi Darah Pro";
+            else if (gameState.score >= 120) badge = "Petualang Darah Cerdas";
+
+            document.getElementById('final-badge').innerText = badge;
+        }
+
+        function restartGame() {
+            gameState.score = 0;
+            gameState.completedMissions.clear();
+            document.getElementById('player-score').innerText = 0;
+            document.getElementById('missions-completed-count').innerText = "0/6";
+            switchMission('home');
+        }
+
+        // Initialize default view
+        window.onload = function() {
+            switchMission('home');
+        };
+    </script>
+</body>
+</html>
